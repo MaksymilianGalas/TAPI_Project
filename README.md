@@ -1,23 +1,4 @@
-# Microservices Application
-
-A complete microservices-based application demonstrating modern architecture patterns with Spring Boot, MongoDB, Keycloak authentication, API Gateway, and React frontend.
-
-## 📋 Requirements Overview
-
-This application fulfills all specified requirements:
-
-### 1. ✅ Podział na Mikroserwisy (Microservices Division)
-- **User Service** (port 8081) - User management with CRUD operations
-- **Order Service** (port 8082) - Order management with CRUD operations  
-- **Document Service** (port 8083) - PDF and Excel document generation
-- Each service runs as an independent process with its own codebase
-
-**Location**: 
-- `user-service/` - Complete Spring Boot microservice
-- `order-service/` - Complete Spring Boot microservice
-- `document-service/` - Complete Spring Boot microservice
-
-### 2. ✅ Izolacja Danych (Data Isolation)
+#
 - **Database per Service** pattern strictly enforced
 - Each microservice has its own isolated MongoDB database:
   - User Service → `userdb` (MongoDB on port 27017)
@@ -27,7 +8,7 @@ This application fulfills all specified requirements:
 
 **Location**: See `docker-compose.yml` - separate MongoDB instances for each service
 
-### 3. ✅ Infrastruktura (Infrastructure)
+
 - Complete Docker Compose orchestration
 - Single command startup: `docker-compose up`
 - Includes:
@@ -39,7 +20,7 @@ This application fulfills all specified requirements:
 
 **Location**: `docker-compose.yml` - complete infrastructure definition
 
-### 4. ✅ Funkcjonalność Podstawowa (Basic Functionality)
+
 - **Keycloak Authentication** - Full login/logout flow
 - **CRUD Operations** implemented in all services:
   - Users: Create, Read, Update, Delete
@@ -52,7 +33,7 @@ This application fulfills all specified requirements:
 - User CRUD: `user-service/src/main/java/com/microservices/userservice/controller/UserController.java`
 - Order CRUD: `order-service/src/main/java/com/microservices/orderservice/controller/OrderController.java`
 
-### 5. ✅ Frontend (Frontend Application)
+
 - **React 18** application with modern UI
 - Communicates with backend through API Gateway only
 - Features:
@@ -64,7 +45,6 @@ This application fulfills all specified requirements:
 
 **Location**: `frontend/` - Complete React application
 
-### 6. ✅ API Gateway
 - **Spring Cloud Gateway** configured and running
 - All frontend requests route through Gateway (port 8080)
 - Frontend does NOT connect directly to microservice ports
@@ -75,7 +55,7 @@ This application fulfills all specified requirements:
 
 **Location**: `gateway/src/main/resources/application.yml` - route definitions
 
-### 7. ✅ Bezpieczeństwo JWT (JWT Security)
+
 - **JWT tokens** issued by Keycloak
 - Token flow:
   1. Frontend authenticates with Keycloak
@@ -90,7 +70,7 @@ This application fulfills all specified requirements:
 - Service validation: `*-service/src/main/java/com/microservices/*/config/SecurityConfig.java`
 - Frontend token handling: `frontend/src/api.js`
 
-### 8. ✅ Generowanie Dokumentów (Document Generation)
+
 - **PDF Generation** using iText library:
   - Invoice PDF
   - Business Report PDF
@@ -121,15 +101,7 @@ cd TAPI_Project
 docker-compose up --build
 ```
 
-Wait for all services to start (approximately 2-3 minutes). You'll see:
-- ✅ PostgreSQL ready
-- ✅ Keycloak ready
-- ✅ MongoDB instances ready (3x)
-- ✅ User Service ready
-- ✅ Order Service ready
-- ✅ Document Service ready
-- ✅ API Gateway ready
-- ✅ Frontend ready
+
 
 ### Access the Application
 
@@ -166,9 +138,6 @@ Wait for all services to start (approximately 2-3 minutes). You'll see:
 - Documents download automatically
 - Metadata saved in Document Service MongoDB
 
-## 🏗️ Architecture
-
-```
 ┌─────────────┐
 │   Browser   │
 └──────┬──────┘
@@ -207,7 +176,7 @@ Wait for all services to start (approximately 2-3 minutes). You'll see:
          └──────────┘
 ```
 
-## 🔒 Security Flow
+
 
 1. User logs in via Frontend
 2. Frontend redirects to Keycloak
@@ -217,7 +186,7 @@ Wait for all services to start (approximately 2-3 minutes). You'll see:
 6. Each microservice independently validates JWT
 7. Only authenticated requests with valid tokens are processed
 
-## 📁 Project Structure
+
 
 ```
 TAPI_Project/
@@ -247,7 +216,7 @@ TAPI_Project/
     └── Dockerfile
 ```
 
-## 🛠️ Technology Stack
+
 
 ### Backend
 - **Spring Boot 3.2.1** - Microservices framework
@@ -271,7 +240,6 @@ TAPI_Project/
 - **PostgreSQL 15** - Keycloak database
 - **Nginx** - Frontend web server
 
-## 🧪 Testing the Application
 
 ### Test User CRUD
 ```bash
@@ -301,7 +269,7 @@ curl -X POST \
   --output invoice.pdf
 ```
 
-## 🔍 Monitoring
+
 
 ### Health Checks
 - User Service: http://localhost:8081/actuator/health
@@ -321,7 +289,6 @@ docker-compose logs -f document-service
 docker-compose logs -f api-gateway
 ```
 
-## 🛑 Stopping the Application
 
 ```bash
 # Stop all services
@@ -331,7 +298,6 @@ docker-compose down
 docker-compose down -v
 ```
 
-## 🎯 Key Features Demonstrated
 
 1. **Microservices Architecture** - Independent, scalable services
 2. **Database per Service** - Complete data isolation
@@ -343,14 +309,14 @@ docker-compose down -v
 8. **Containerization** - Docker for all components
 9. **Infrastructure as Code** - Docker Compose orchestration
 
-## 📝 Default Users
+
 
 | Username | Password  | Role  |
 |----------|-----------|-------|
 | admin    | admin123  | Admin |
 | user     | user123   | User  |
 
-## 🔧 Configuration
+
 
 All services are configured via environment variables in `docker-compose.yml`:
 - Database connections
@@ -358,7 +324,6 @@ All services are configured via environment variables in `docker-compose.yml`:
 - Service URLs
 - JWT validation settings
 
-## 📚 API Documentation
 
 ### User Service
 - `GET /api/users` - List all users
@@ -381,18 +346,3 @@ All services are configured via environment variables in `docker-compose.yml`:
 - `POST /api/documents/generate/excel/orders` - Generate order Excel
 - `POST /api/documents/generate/excel/users` - Generate user Excel
 
-## 🎓 Learning Resources
-
-This project demonstrates:
-- Microservices design patterns
-- RESTful API design
-- JWT authentication flow
-- Docker containerization
-- React frontend development
-- Spring Boot best practices
-- MongoDB database design
-- API Gateway implementation
-
----
-
-**Built with ❤️ using Spring Boot, React, and Docker**

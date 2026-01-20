@@ -28,12 +28,12 @@ function Home() {
             <div className="card" style={{ marginTop: '2rem' }}>
                 <h2>System Features</h2>
                 <ul style={{ lineHeight: '2', fontSize: '1.1rem' }}>
-                    <li>✅ User Management Service</li>
-                    <li>✅ Order Management Service</li>
-                    <li>✅ Document Generation Service (PDF & Excel)</li>
-                    <li>✅ API Gateway with JWT Validation</li>
-                    <li>✅ Keycloak Authentication</li>
-                    <li>✅ Database per Service (MongoDB)</li>
+                    <li>User Management Service</li>
+                    <li>Order Management Service</li>
+                    <li>Document Generation Service (PDF & Excel)</li>
+                    <li>API Gateway with JWT Validation</li>
+                    <li>Keycloak Authentication</li>
+                    <li>Database per Service (MongoDB)</li>
                 </ul>
             </div>
         </div>

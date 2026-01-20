@@ -47,7 +47,6 @@ public class OrderService {
     public Order createOrder(Order order) {
         log.info("Creating new order for customer: {}", order.getCustomerId());
 
-        // Generate order number if not provided
         if (order.getOrderNumber() == null || order.getOrderNumber().isEmpty()) {
             order.setOrderNumber("ORD-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase());
         }
@@ -56,7 +55,6 @@ public class OrderService {
             throw new RuntimeException("Order number already exists: " + order.getOrderNumber());
         }
 
-        // Calculate total amount
         if (order.getItems() != null && !order.getItems().isEmpty()) {
             BigDecimal total = order.getItems().stream()
                     .map(item -> {
@@ -84,7 +82,6 @@ public class OrderService {
         Order order = orderRepository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Order not found with id: " + id));
 
-        // Check if order number is being changed and if it already exists
         if (!order.getOrderNumber().equals(orderDetails.getOrderNumber()) &&
                 orderRepository.existsByOrderNumber(orderDetails.getOrderNumber())) {
             throw new RuntimeException("Order number already exists: " + orderDetails.getOrderNumber());
@@ -99,7 +96,6 @@ public class OrderService {
         order.setShippingAddress(orderDetails.getShippingAddress());
         order.setNotes(orderDetails.getNotes());
 
-        // Recalculate total amount
         if (order.getItems() != null && !order.getItems().isEmpty()) {
             BigDecimal total = order.getItems().stream()
                     .map(item -> {
