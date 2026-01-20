@@ -1,0 +1,252 @@
+version: '3.8'
+
+services:
+  # PostgreSQL for Keycloak
+  postgres:
+    image: postgres:15
+    container_name: postgres
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: keycloak
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U keycloak"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # Keycloak
+  keycloak:
+    image: quay.io/keycloak/keycloak:23.0
+    container_name: keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL: jdbc:postgresql://postgres:5432/keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: keycloak
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: admin
+      KC_HTTP_PORT: 8180
+      KC_HOSTNAME_STRICT: false
+      KC_HOSTNAME_STRICT_HTTPS: false
+      KC_HTTP_ENABLED: true
+    command:
+      - start-dev
+      - --http-port=8180
+      - --import-realm
+    ports:
+      - "8180:8180"
+    volumes:
+      - ./keycloak/realm-export.json:/opt/keycloak/data/import/realm-export.json
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8180/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # MongoDB for User Service
+  mongodb-user:
+    image: mongo:7.0
+    container_name: mongodb-user
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: userservice
+      MONGO_INITDB_ROOT_PASSWORD: userservice123
+      MONGO_INITDB_DATABASE: userdb
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_user_data:/data/db
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB for Order Service
+  mongodb-order:
+    image: mongo:7.0
+    container_name: mongodb-order
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: orderservice
+      MONGO_INITDB_ROOT_PASSWORD: orderservice123
+      MONGO_INITDB_DATABASE: orderdb
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongodb_order_data:/data/db
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # MongoDB for Document Service
+  mongodb-document:
+    image: mongo:7.0
+    container_name: mongodb-document
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: documentservice
+      MONGO_INITDB_ROOT_PASSWORD: documentservice123
+      MONGO_INITDB_DATABASE: documentdb
+    ports:
+      - "27019:27017"
+    volumes:
+      - mongodb_document_data:/data/db
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # User Service
+  user-service:
+    build:
+      context: ./user-service
+      dockerfile: Dockerfile
+    container_name: user-service
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://userservice:userservice123@mongodb-user:27017/userdb?authSource=admin
+      KEYCLOAK_ISSUER_URI: http://keycloak:8180/realms/microservices
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8180/realms/microservices/protocol/openid-connect/certs
+    ports:
+      - "8081:8081"
+    depends_on:
+      mongodb-user:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8081/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Order Service
+  order-service:
+    build:
+      context: ./order-service
+      dockerfile: Dockerfile
+    container_name: order-service
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://orderservice:orderservice123@mongodb-order:27017/orderdb?authSource=admin
+      KEYCLOAK_ISSUER_URI: http://keycloak:8180/realms/microservices
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8180/realms/microservices/protocol/openid-connect/certs
+    ports:
+      - "8082:8082"
+    depends_on:
+      mongodb-order:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8082/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Document Service
+  document-service:
+    build:
+      context: ./document-service
+      dockerfile: Dockerfile
+    container_name: document-service
+    environment:
+      SPRING_DATA_MONGODB_URI: mongodb://documentservice:documentservice123@mongodb-document:27017/documentdb?authSource=admin
+      KEYCLOAK_ISSUER_URI: http://keycloak:8180/realms/microservices
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8180/realms/microservices/protocol/openid-connect/certs
+    ports:
+      - "8083:8083"
+    depends_on:
+      mongodb-document:
+        condition: service_healthy
+      keycloak:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8083/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # API Gateway
+  api-gateway:
+    build:
+      context: ./gateway
+      dockerfile: Dockerfile
+    container_name: api-gateway
+    environment:
+      USER_SERVICE_URL: http://user-service:8081
+      ORDER_SERVICE_URL: http://order-service:8082
+      DOCUMENT_SERVICE_URL: http://document-service:8083
+      KEYCLOAK_ISSUER_URI: http://keycloak:8180/realms/microservices
+      KEYCLOAK_JWK_SET_URI: http://keycloak:8180/realms/microservices/protocol/openid-connect/certs
+    ports:
+      - "8080:8080"
+    depends_on:
+      user-service:
+        condition: service_healthy
+      order-service:
+        condition: service_healthy
+      document-service:
+        condition: service_healthy
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD-SHELL", "curl -f http://localhost:8080/actuator/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # React Frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: frontend
+    environment:
+      REACT_APP_API_GATEWAY_URL: http://localhost:8080
+      REACT_APP_KEYCLOAK_URL: http://localhost:8180
+      REACT_APP_KEYCLOAK_REALM: microservices
+      REACT_APP_KEYCLOAK_CLIENT_ID: frontend-client
+    ports:
+      - "3000:80"
+    depends_on:
+      api-gateway:
+        condition: service_healthy
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
+  mongodb_user_data:
+  mongodb_order_data:
+  mongodb_document_data:
