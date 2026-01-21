@@ -3,6 +3,7 @@ import api from '../api';
 
 function OrderManagement() {
     const [orders, setOrders] = useState([]);
+    const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState('');
     const [showModal, setShowModal] = useState(false);
@@ -19,6 +20,7 @@ function OrderManagement() {
 
     useEffect(() => {
         fetchOrders();
+        fetchUsers();
     }, []);
 
     const fetchOrders = async () => {
@@ -34,6 +36,37 @@ function OrderManagement() {
         }
     };
 
+    const fetchUsers = async () => {
+        try {
+            const response = await api.get('/api/users');
+            setUsers(response.data);
+        } catch (err) {
+            console.error('Failed to fetch users:', err);
+        }
+    };
+
+    const handleUserSelect = (e) => {
+        const userId = e.target.value;
+        if (userId) {
+            const selectedUser = users.find(u => u.id === userId);
+            if (selectedUser) {
+                setFormData({
+                    ...formData,
+                    customerId: selectedUser.id,
+                    customerName: `${selectedUser.firstName} ${selectedUser.lastName}`,
+                    customerEmail: selectedUser.email || '',
+                });
+            }
+        } else {
+            setFormData({
+                ...formData,
+                customerId: '',
+                customerName: '',
+                customerEmail: '',
+            });
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         try {
@@ -41,7 +74,7 @@ function OrderManagement() {
                 ...formData,
                 items: formData.items.map(item => ({
                     ...item,
-                    productId: `PROD-${Date.now()}`,
+                    productId: `PROD-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
                     quantity: parseInt(item.quantity),
                     price: parseFloat(item.price),
                 })),
@@ -193,34 +226,50 @@ function OrderManagement() {
                         <h3>{editingOrder ? 'Edit Order' : 'Create New Order'}</h3>
                         <form onSubmit={handleSubmit}>
                             <div className="form-group">
-                                <label>Customer ID *</label>
-                                <input
-                                    type="text"
-                                    name="customerId"
+                                <label>Select Customer *</label>
+                                <select
                                     value={formData.customerId}
-                                    onChange={handleChange}
+                                    onChange={handleUserSelect}
                                     required
-                                />
+                                    disabled={editingOrder !== null}
+                                >
+                                    <option value="">-- Select a customer --</option>
+                                    {users.map(user => (
+                                        <option key={user.id} value={user.id}>
+                                            {user.firstName} {user.lastName} ({user.email})
+                                        </option>
+                                    ))}
+                                </select>
+                                {editingOrder && (
+                                    <small style={{ color: '#666', fontSize: '0.85rem' }}>
+                                        Customer cannot be changed when editing an order
+                                    </small>
+                                )}
                             </div>
-                            <div className="form-group">
-                                <label>Customer Name *</label>
-                                <input
-                                    type="text"
-                                    name="customerName"
-                                    value={formData.customerName}
-                                    onChange={handleChange}
-                                    required
-                                />
-                            </div>
-                            <div className="form-group">
-                                <label>Customer Email</label>
-                                <input
-                                    type="email"
-                                    name="customerEmail"
-                                    value={formData.customerEmail}
-                                    onChange={handleChange}
-                                />
-                            </div>
+
+                            {formData.customerId && (
+                                <>
+                                    <div className="form-group">
+                                        <label>Customer Name</label>
+                                        <input
+                                            type="text"
+                                            value={formData.customerName}
+                                            disabled
+                                            style={{ backgroundColor: '#f5f5f5' }}
+                                        />
+                                    </div>
+                                    <div className="form-group">
+                                        <label>Customer Email</label>
+                                        <input
+                                            type="email"
+                                            value={formData.customerEmail}
+                                            disabled
+                                            style={{ backgroundColor: '#f5f5f5' }}
+                                        />
+                                    </div>
+                                </>
+                            )}
+
                             <div className="form-group">
                                 <label>Shipping Address</label>
                                 <textarea
@@ -228,6 +277,7 @@ function OrderManagement() {
                                     value={formData.shippingAddress}
                                     onChange={handleChange}
                                     rows="2"
+                                    placeholder="Enter shipping address"
                                 />
                             </div>
                             <div className="form-group">
@@ -250,6 +300,7 @@ function OrderManagement() {
                                             type="text"
                                             value={item.productName}
                                             onChange={(e) => handleItemChange(index, 'productName', e.target.value)}
+                                            placeholder="e.g., Laptop, Phone, etc."
                                             required
                                         />
                                     </div>
@@ -265,13 +316,14 @@ function OrderManagement() {
                                             />
                                         </div>
                                         <div className="form-group">
-                                            <label>Price *</label>
+                                            <label>Price (per unit) *</label>
                                             <input
                                                 type="number"
                                                 step="0.01"
                                                 min="0"
                                                 value={item.price}
                                                 onChange={(e) => handleItemChange(index, 'price', e.target.value)}
+                                                placeholder="0.00"
                                                 required
                                             />
                                         </div>
@@ -281,6 +333,7 @@ function OrderManagement() {
                                             type="button"
                                             className="btn btn-danger"
                                             onClick={() => removeItem(index)}
+                                            style={{ marginTop: '0.5rem' }}
                                         >
                                             Remove Item
                                         </button>
@@ -289,7 +342,7 @@ function OrderManagement() {
                             ))}
 
                             <button type="button" className="btn btn-secondary" onClick={addItem}>
-                                Add Item
+                                Add Another Item
                             </button>
 
                             <div className="form-group">
@@ -299,6 +352,7 @@ function OrderManagement() {
                                     value={formData.notes}
                                     onChange={handleChange}
                                     rows="3"
+                                    placeholder="Any additional notes about this order"
                                 />
                             </div>
 
@@ -307,7 +361,7 @@ function OrderManagement() {
                                     Cancel
                                 </button>
                                 <button type="submit" className="btn">
-                                    {editingOrder ? 'Update' : 'Create'}
+                                    {editingOrder ? 'Update Order' : 'Create Order'}
                                 </button>
                             </div>
                         </form>

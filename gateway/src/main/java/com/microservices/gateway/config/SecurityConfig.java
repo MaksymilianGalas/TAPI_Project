@@ -37,7 +37,6 @@ public class SecurityConfig {
                 .withJwkSetUri(jwkSetUri)
                 .build();
 
-        // Only validate signature and timestamps, skip issuer validation
         OAuth2TokenValidator<Jwt> timestampValidator = new JwtTimestampValidator();
         jwtDecoder.setJwtValidator(timestampValidator);
 

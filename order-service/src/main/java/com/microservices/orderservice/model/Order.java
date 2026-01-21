@@ -22,7 +22,6 @@ public class Order {
     @Id
     private String id;
 
-    @NotBlank(message = "Order number is required")
     private String orderNumber;
 
     @NotBlank(message = "Customer ID is required")
@@ -36,8 +35,6 @@ public class Order {
     @NotNull(message = "Order items are required")
     private List<OrderItem> items;
 
-    @NotNull(message = "Total amount is required")
-    @Positive(message = "Total amount must be positive")
     private BigDecimal totalAmount;
 
     @NotBlank(message = "Status is required")
