@@ -19,20 +19,19 @@ import java.util.Map;
 @RequestMapping("/api/documents")
 @RequiredArgsConstructor
 @Slf4j
-@CrossOrigin(origins = "*")
 public class DocumentController {
 
     private final DocumentService documentService;
 
     @GetMapping
-    @PreAuthorize("hasAnyAuthority('SCOPE_user', 'SCOPE_admin')")
+    @PreAuthorize("hasAnyRole('user', 'admin')")
     public ResponseEntity<List<DocumentMetadata>> getAllDocuments() {
         log.info("GET /api/documents - Fetching all documents");
         return ResponseEntity.ok(documentService.getAllDocuments());
     }
 
     @GetMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SCOPE_user', 'SCOPE_admin')")
+    @PreAuthorize("hasAnyRole('user', 'admin')")
     public ResponseEntity<DocumentMetadata> getDocumentById(@PathVariable String id) {
         log.info("GET /api/documents/{} - Fetching document by id", id);
         return documentService.getDocumentById(id)
@@ -41,7 +40,7 @@ public class DocumentController {
     }
 
     @PostMapping("/generate/pdf/invoice")
-    @PreAuthorize("hasAnyAuthority('SCOPE_user', 'SCOPE_admin')")
+    @PreAuthorize("hasAnyRole('user', 'admin')")
     public ResponseEntity<byte[]> generateInvoicePdf(@RequestBody Map<String, Object> data,
             Authentication authentication) {
         log.info("POST /api/documents/generate/pdf/invoice - Generating invoice PDF");
@@ -62,7 +61,7 @@ public class DocumentController {
     }
 
     @PostMapping("/generate/pdf/report")
-    @PreAuthorize("hasAnyAuthority('SCOPE_user', 'SCOPE_admin')")
+    @PreAuthorize("hasAnyRole('user', 'admin')")
     public ResponseEntity<byte[]> generateReportPdf(@RequestBody Map<String, Object> data,
             Authentication authentication) {
         log.info("POST /api/documents/generate/pdf/report - Generating report PDF");
@@ -83,7 +82,7 @@ public class DocumentController {
     }
 
     @PostMapping("/generate/excel/orders")
-    @PreAuthorize("hasAnyAuthority('SCOPE_user', 'SCOPE_admin')")
+    @PreAuthorize("hasAnyRole('user', 'admin')")
     public ResponseEntity<byte[]> generateOrderReportExcel(@RequestBody Map<String, Object> data,
             Authentication authentication) {
         log.info("POST /api/documents/generate/excel/orders - Generating order report Excel");
@@ -105,7 +104,7 @@ public class DocumentController {
     }
 
     @PostMapping("/generate/excel/users")
-    @PreAuthorize("hasAnyAuthority('SCOPE_user', 'SCOPE_admin')")
+    @PreAuthorize("hasAnyRole('user', 'admin')")
     public ResponseEntity<byte[]> generateUserReportExcel(@RequestBody Map<String, Object> data,
             Authentication authentication) {
         log.info("POST /api/documents/generate/excel/users - Generating user report Excel");
@@ -127,7 +126,7 @@ public class DocumentController {
     }
 
     @DeleteMapping("/{id}")
-    @PreAuthorize("hasAnyAuthority('SCOPE_admin')")
+    @PreAuthorize("hasRole('admin')")
     public ResponseEntity<Void> deleteDocument(@PathVariable String id) {
         log.info("DELETE /api/documents/{} - Deleting document", id);
         try {
